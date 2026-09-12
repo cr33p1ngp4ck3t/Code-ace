@@ -1,0 +1,15 @@
+{
+  "package": "C:\\Users\\Toshiba\\Desktop\\Code-ace\\artifacts\\nova-digital-shield-0.1.0",
+  "testedAt": "2026-09-12T07:40:57.408Z",
+  "checks": [
+    "Packaged Manifest V3 extension and service worker load",
+    "Popup, scripts and icon load",
+    "Popup pauses and resumes badges",
+    "Packaged content scripts flag the x.com fixture",
+    "Packaged content scripts flag the www.facebook.com fixture",
+    "Packaged content scripts flag the www.instagram.com fixture",
+    "Packaged content scripts flag the www.linkedin.com fixture",
+    "No uncaught browser errors"
+  ],
+  "scope": "Headless Chromium with representative platform fixtures; no live account or AI provider calls."
+}

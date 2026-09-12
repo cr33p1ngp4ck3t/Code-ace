@@ -1,0 +1,21 @@
+{
+  "testedAt": "2026-09-12T07:30:38.139Z",
+  "browser": "C:\\Users\\Toshiba\\AppData\\Local\\ms-playwright\\chromium-1228\\chrome-win64\\chrome.exe",
+  "checks": [
+    "Manifest V3 extension loads with its service worker",
+    "Local warnings and private saving work without cloud calls",
+    "Urdu interface, Urdu rules and mobile layout work",
+    "Images are resized locally, checked on demand, safely rendered and cached",
+    "Audio is converted to bounded WAV, transcribed and checked",
+    "Video checks use two actual frames and extracted speech",
+    "A video without audio has an explicit omission and never claims speech was checked",
+    "Provider failures show an error and preserve a labeled local result",
+    "Real extension adds risk badges, handles dynamic posts and makes no AI calls",
+    "Extension imports an actual post image into the studio without analyzing it automatically",
+    "Popup can pause and resume automatic scanning",
+    "All four platform adapters work against representative DOM fixtures (not live accounts)",
+    "Studio has no uncaught browser errors"
+  ],
+  "provider": "test double — no live API calls",
+  "platformVerification": "representative DOM fixtures, not authenticated live feeds"
+}
