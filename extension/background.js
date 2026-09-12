@@ -1,4 +1,11 @@
 import { getBackend } from './backend.js';
+import { installWebsiteNavigation } from './website-navigation.js';
+installWebsiteNavigation();
+chrome.permissions.onAdded.addListener(installWebsiteNavigation);
+chrome.permissions.onRemoved.addListener(async () => {
+  const allowed = await chrome.permissions.contains({ permissions: ['webNavigation'], origins: ['http://*/*', 'https://*/*'] });
+  if (!allowed) await chrome.storage.local.set({ websiteGuard: false });
+});
 const FEED_HOSTS = new Set(['x.com', 'twitter.com', 'www.facebook.com', 'facebook.com', 'www.instagram.com', 'instagram.com', 'www.linkedin.com', 'linkedin.com', '127.0.0.1', 'localhost']);
 function supportedPage(raw) { try { const url = new URL(raw); return FEED_HOSTS.has(url.hostname) && (url.protocol === 'https:' || (['127.0.0.1', 'localhost'].includes(url.hostname) && url.protocol === 'http:' && url.pathname.startsWith('/demo'))); } catch { return false; } }
 function allowedMedia(raw, backend) {
@@ -32,6 +39,7 @@ function panelDraft(post, tabId, language) {
   if (panelDrafts.size >= 20) panelDrafts.delete(panelDrafts.keys().next().value);
   const id = crypto.randomUUID();
   const data = { text: typeof post?.text === 'string' ? post.text.slice(0, 6000) : '', links: Array.isArray(post?.links) ? post.links.filter(x => typeof x === 'string' && x.length < 2000).slice(0, 8) : [], media: Array.isArray(post?.media) ? post.media.slice(0, 4).map(item => ({ kind: String(item?.kind || '').slice(0, 10), src: String(item?.src || '').slice(0, 4000) })) : [], hasMedia: Boolean(post?.hasMedia), permalink: String(post?.permalink || '').slice(0, 2000), platform: String(post?.platform || 'Selected content').slice(0, 60) };
+  data.context = post?.context === 'website' ? 'website' : 'post';
   panelDrafts.set(id, { post: data, tabId, language: language === 'ur' ? 'ur' : 'en', expires: Date.now() + 60000 });
   return id;
 }

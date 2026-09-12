@@ -46,6 +46,16 @@ On Windows/macOS, `npm run dev` watches `.env` and the server folder and restart
 
 The **AI writing & quality** section flags possible formulaic phrasing, repeated structures, generic claims, assistant-like wording, or explicit AI-writing disclosures. It shows source excerpts and remains separate from scam risk. Short text gets an insufficient-evidence result. These are writing observations, not proof of authorship or an AI percentage; see the [ACL study on social-post detection limits](https://aclanthology.org/2025.findings-acl.695/). Images, audio, and video can also be reviewed inside the panel. The toolbar still opens the full studio when wanted.
 
+## Website redirect warnings
+
+Open the extension popup → **Website redirect warnings** → enable **Warn after website redirects**, then allow Chrome's website-access request. This optional feature works on HTTP/HTTPS websites beyond the four social platforms. It detects browser-reported HTTP and JavaScript/meta redirects; direct navigation and redirects inside embedded frames do not trigger it.
+
+After a redirect, a small card on the **bottom-left** appears only when the destination's text contains a supported warning signal. Concrete scam patterns show **This site may be unsafe** with an excerpt and a next step. AI-like/formulaic writing gets a separate writing notice; it cannot make a site unsafe by itself. Ordinary password-entry instructions are not treated as phishing evidence. These checks do not establish a site's reputation or detect malware.
+
+The check reads up to 6,000 characters of visible main-page text, excludes forms and editable inputs, and watches for delayed content for up to 20 seconds. It makes no AI calls and stores no navigation history. **×** dismisses the card for that document. **Review this page** opens the same-tab panel; only **Analyze with AI** sends its selected text to the configured backend. Turning the toggle off removes active warnings. Revoking the requested browser permissions also disables this feature.
+
+See Chrome's [navigation events](https://developer.chrome.com/docs/extensions/reference/api/webNavigation) and [optional permissions](https://developer.chrome.com/docs/extensions/reference/api/permissions) for the browser mechanisms used.
+
 The popup scans the current feed when opened and can scan again, pause badges, change the badge language, and show private post flags. Installation also initializes supported feed tabs that are already open. Right-click selected text or an image to open a review. Media import is limited to supported platform CDNs; when a protected, streaming, blob, or oversized file cannot be imported, upload the original in the studio. Inline text checks require no backend or API key.
 
 If badges are missing, reload Verifeed on the browser's extensions page, refresh the feed, and open the Verifeed popup. Make sure **Automatic local checks** is on. The popup reports how many posts were found, whether checks are paused, or whether the tab could not be accessed. For access errors, allow Verifeed access to the site in the browser's extension settings. If it reports no posts after scrolling, the current feed layout may not match an adapter; selected text can still be reviewed from the right-click menu.
@@ -89,6 +99,7 @@ npm test
 npm run test:extension
 npm run test:remote
 npm run test:panel
+npm run test:website
 # If no Playwright Chromium is already installed:
 npx playwright install chromium
 # Browser tests use an isolated server on an available port:

@@ -6,6 +6,8 @@ A browser extension puts an understandable scam-risk badge beside posts. Local c
 
 The feed control is now a compact pill at each post's bottom-right. It opens a same-tab dialog for text and media review, dismissed only by its × control. The AI-writing section explains possible formulaic/low-information writing with exact excerpts and uncertain authorship; it never treats AI-like style as scam evidence. Writing assessment shares the existing Groq request.
 
+Optional website redirect warnings extend this to destination pages: browser-reported redirects trigger a bounded local scan of visible text, excluding forms and editable inputs. A left-side card distinguishes scam signals from AI-style writing, with no automatic uploads. Its review button uses the same-tab panel. HTTP/HTTPS site access and navigation permission are requested only when the user enables the feature.
+
 Scam risk and media origin are separate. Green means no obvious warning signs in the checked material, never verified safety. Gray means insufficient evidence. Image analysis and transcription do not establish authentic media, voice identity, or whether AI created it.
 
 ## MVP implementation
@@ -47,6 +49,6 @@ Model availability depends on the Groq account and can change; all three IDs are
 
 ## Implemented and verified
 
-The extension, studio, all four platform adapters, multimodal pipeline, English/Urdu interface, private flags, practice media, configurable backend, and Oracle deployment are implemented. JavaScript/JSON checks, 33 unit/integration tests, 13 browser checks, five extension setup checks, three server connection checks, and five same-tab panel checks pass. These cover actual extension loading, media preparation, dismissal behavior, writing evidence, provider errors, and representative platform DOM fixtures. Automated provider responses are test doubles; live Oracle checks are recorded separately.
+The extension, studio, all four platform adapters, multimodal pipeline, English/Urdu interface, private flags, practice media, configurable backend, and Oracle deployment are implemented. JavaScript/JSON checks and 37 unit/integration tests pass. Browser coverage includes 13 studio/feed checks, five extension setup checks, three server connection checks, five same-tab panel checks, and six website redirect checks. The new redirect checks exercise actual HTTP and JavaScript navigation, delayed content, dismissal, form-value exclusion, and zero automatic AI calls. Automated provider responses are test doubles; live Oracle checks are recorded separately.
 
 Live text, image, audio, and video checks all passed through the Oracle backend on September 12, 2026, using its configured Groq key. Results are recorded separately in `artifacts/live-check-results.json`. Remaining external validation: extraction against the user's authenticated live social feeds. This does not include forensic AI-origin/deepfake/voice-clone detection.

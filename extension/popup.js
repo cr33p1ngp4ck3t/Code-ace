@@ -1,5 +1,6 @@
 import { getBackend, openStudio } from './backend.js';
 import { mountConnection } from './connection.js';
+import { mountWebsiteSettings } from './website-settings.js';
 
 const $ = selector => document.querySelector(selector);
 let language = 'en';
@@ -23,6 +24,7 @@ const updatePracticeLink = () => getBackend().then(backend => { $('#practice').h
 updatePracticeLink();
 chrome.storage.onChanged.addListener((changes, area) => { if (area === 'local' && changes.backendUrl) updatePracticeLink(); });
 mountConnection();
+mountWebsiteSettings();
 async function scanCurrentFeed() {
   $('#scan').disabled = true;
   $('#status').textContent = language === 'ur' ? 'فیڈ دیکھی جا رہی ہے…' : 'Looking for posts on this tab…';

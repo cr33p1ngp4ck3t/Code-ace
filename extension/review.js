@@ -1,5 +1,6 @@
 import { getBackend, backendRequest } from './backend.js';
 import { prepareFile } from './shared/media.js';
+import './shared/website.js';
 const $ = selector => document.querySelector(selector);
 let post, language = 'en', media = null, notes = [], result, busy = true, speaking = false;
 const words = {
@@ -9,8 +10,8 @@ const words = {
 const w = key => words[language][key];
 function node(tag, text, className) { const element = document.createElement(tag); if (text) element.textContent = text; if (className) element.className = className; return element; }
 function fileFrom(item) { const [prefix, data] = item.dataUrl.split(','); return new File([Uint8Array.from(atob(data), c => c.charCodeAt(0))], item.name, { type: prefix.slice(5).split(';')[0] }); }
-function snapshot() { return { text: post.text, links: post.links, language, kind: media?.kind || 'text', images: media?.images || [], audio: media?.audio || null, hasMedia: Boolean(post.hasMedia || media), notes: [...notes, ...(media?.notes || [])].slice(0, 4) }; }
-function localResult() { const input = snapshot(); return { ...NovaRules.scan(input), writing: VerifeedWriting.scan(input.text, language) }; }
+function snapshot() { return { text: post.text, links: post.links, language, context: post.context || 'post', kind: media?.kind || 'text', images: media?.images || [], audio: media?.audio || null, hasMedia: Boolean(post.hasMedia || media), notes: [...notes, ...(media?.notes || [])].slice(0, 4) }; }
+function localResult() { const input = snapshot(); return { ...(input.context === 'website' ? VerifeedWebsite.scan(input) : NovaRules.scan(input)), writing: VerifeedWriting.scan(input.text, language) }; }
 function displayReasons(target, reasons) {
   target.replaceChildren();
   for (const reason of reasons) {

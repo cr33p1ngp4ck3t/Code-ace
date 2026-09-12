@@ -15,6 +15,7 @@
     "test:extension": "node tests/extension-setup.mjs",
     "test:remote": "node tests/remote-connection.mjs",
     "test:panel": "node tests/panel.mjs",
+    "test:website": "node tests/website-guard.mjs",
     "check": "node scripts/check.mjs"
   },
   "devDependencies": {
