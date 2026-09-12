@@ -12,6 +12,7 @@
     "dev": "node --watch --watch-path=.env --watch-path=server --env-file-if-exists=.env server/index.js",
     "test": "node --test tests/*.test.js",
     "test:browser": "node tests/browser.mjs",
+    "test:extension": "node tests/extension-setup.mjs",
     "check": "node scripts/check.mjs"
   },
   "devDependencies": {

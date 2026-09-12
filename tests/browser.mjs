@@ -31,7 +31,7 @@ try {
   const page = await context.newPage(), errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('http://127.0.0.1:4317/');
-  await page.waitForFunction(() => document.querySelector('#ai-status').textContent.includes('ready'));
+  await page.waitForFunction(() => document.querySelector('#ai-status').textContent.includes('AI key loaded'));
   await page.screenshot({ path: 'artifacts/studio-desktop.png', fullPage: true });
   await page.getByRole('button', { name: 'A suspicious offer' }).click();
   await page.locator('#local-check').click();

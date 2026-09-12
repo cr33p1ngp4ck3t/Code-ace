@@ -30,7 +30,13 @@ On Windows/macOS, `npm run dev` watches `.env` and the server folder and restart
 4. Look for Nova’s badge. **Why?** explains local rules. **Open full check** imports the selected post into the studio; it does not call AI.
 5. Review the prepared content, then press **Check with AI** to send it to Groq.
 
-The popup can scan manually, pause badges, change the badge language, and show private post flags. Right-click selected text or an image to open a review. Media import is limited to supported platform CDNs; when a protected, streaming, blob, or oversized file cannot be imported, upload the original in the studio. Inline text checks require no backend or API key.
+The popup scans the current feed when opened and can scan again, pause badges, change the badge language, and show private post flags. Installation also initializes supported feed tabs that are already open. Right-click selected text or an image to open a review. Media import is limited to supported platform CDNs; when a protected, streaming, blob, or oversized file cannot be imported, upload the original in the studio. Inline text checks require no backend or API key.
+
+If badges are missing, reload Nova on the browser's extensions page, refresh the feed, and open the Nova popup. Make sure **Automatic local checks** is on. The popup reports how many posts were found, whether checks are paused, or whether the tab could not be accessed. For access errors, allow Nova access to the site in the browser's extension settings. If it reports no posts after scrolling, the current feed layout may not match an adapter; selected text can still be reviewed from the right-click menu.
+
+The LinkedIn adapter handles both legacy class-based posts and `data-view-name="feed-full-update"` / activity `data-id` containers, including markers assigned after a post loads. These alternative containers are also used in [published LinkedIn filters](https://blog.georgovassilis.com/2025/05/27/hiding-suggested-linkedin-posts/) and a [post-permalink userscript](https://gist.github.com/wohfab/71e0785399afdf8f0b9eaeeaa9c58500). Browser tests cover representative layouts; a logged-in live feed still needs user verification.
+
+For AI setup, put a valid Groq API key in `GROQ_API_KEY` in the backend `.env`, then restart `npm start` (or let `npm run dev` restart automatically). The studio distinguishes a loaded key from successfully checked access. A rejected-key error means Groq returned 401; a denied-access error means 403 and points to organization/project permissions. See [Groq error codes](https://console.groq.com/docs/errors) and [model permissions](https://console.groq.com/docs/model-permissions). A quick local check only looks for implemented scam patterns in text; it does not inspect images, verify facts, or guarantee that an unflagged post is safe.
 
 ## What each check does
 
@@ -63,6 +69,8 @@ The demo has conservative per-process request/token budgets, one active analysis
 npm install
 npm run check
 npm test
+# Installation, feed initialization and AI setup errors; can run alongside npm start:
+npm run test:extension
 # If no Playwright Chromium is already installed:
 npx playwright install chromium
 # Stop npm start first; browser tests use port 4317:

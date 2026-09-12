@@ -124,8 +124,15 @@ async function runCheck(ai) {
   setBusy(true); renderResult(true);
   try {
     const response = await fetch('/api/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input), signal: AbortSignal.timeout(145000) });
-    const data = await response.json(); if (!response.ok) throw new Error(data.error || 'This check could not be completed.');
+    const data = await response.json();
+    if (!response.ok) {
+      if (['AI_NOT_CONFIGURED', 'PROVIDER_AUTH', 'PROVIDER_PERMISSION'].includes(data.code)) {
+        $('#ai-status').textContent = data.error; $('#ai-status').className = 'setup-note';
+      }
+      throw new Error(data.error || 'This check could not be completed.');
+    }
     state.result = data;
+    $('#ai-status').textContent = t('ready'); $('#ai-status').className = 'setup-note ready';
   } catch (error) { message(error.name === 'TimeoutError' ? 'The check took too long. The local result is shown below.' : error.message); }
   finally { setBusy(false); renderResult(); }
 }
@@ -164,7 +171,7 @@ function applyLanguage() {
   renderExamples(); renderMedia(); renderSaved(); renderResult(); refreshStatus();
 }
 async function refreshStatus() {
-  try { const response = await fetch('/api/status'); if (!response.ok) throw new Error(); const status = await response.json(); $('#ai-status').textContent = t(status.configured ? 'ready' : 'missingKey'); $('#ai-status').className = `setup-note${status.configured ? ' ready' : ''}`; }
+  try { const response = await fetch('/api/status'); if (!response.ok) throw new Error(); const status = await response.json(); $('#ai-status').textContent = t(status.configured ? 'keyLoaded' : 'missingKey'); $('#ai-status').className = 'setup-note'; }
   catch { $('#ai-status').textContent = t('offline'); }
 }
 async function loadDraft() {

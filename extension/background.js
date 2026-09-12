@@ -1,5 +1,5 @@
 const BACKEND = 'http://127.0.0.1:4317';
-const FEED_HOSTS = new Set(['x.com', 'twitter.com', 'www.facebook.com', 'www.instagram.com', 'www.linkedin.com', '127.0.0.1', 'localhost']);
+const FEED_HOSTS = new Set(['x.com', 'twitter.com', 'www.facebook.com', 'facebook.com', 'www.instagram.com', 'instagram.com', 'www.linkedin.com', 'linkedin.com', '127.0.0.1', 'localhost']);
 function supportedPage(raw) { try { const url = new URL(raw); return FEED_HOSTS.has(url.hostname) && (url.protocol === 'https:' || (['127.0.0.1', 'localhost'].includes(url.hostname) && url.protocol === 'http:' && url.port === '4317')); } catch { return false; } }
 function allowedMedia(raw) {
   try {
@@ -43,11 +43,17 @@ async function openReview(post) {
     await chrome.tabs.create({ url: `${BACKEND}/?draft=${encodeURIComponent(data.id)}` });
   } finally { opening = false; }
 }
-chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener(async () => {
   chrome.contextMenus.removeAll(() => {
     chrome.contextMenus.create({ id: 'nova-selection', title: 'Review selected text with Nova', contexts: ['selection'] });
     chrome.contextMenus.create({ id: 'nova-image', title: 'Review this image with Nova', contexts: ['image'] });
   });
+  // Tabs that were open before installation do not receive declarative scripts.
+  const script = chrome.runtime.getManifest().content_scripts[0];
+  const tabs = await chrome.tabs.query({ url: script.matches });
+  await Promise.allSettled(tabs.filter(tab => supportedPage(tab.url)).map(tab =>
+    chrome.scripting.executeScript({ target: { tabId: tab.id }, files: script.js })
+  ));
 });
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (!['nova-selection', 'nova-image'].includes(info.menuItemId)) return;

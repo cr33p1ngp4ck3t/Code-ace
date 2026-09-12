@@ -20,6 +20,21 @@ test('missing API key returns an explicit setup error and makes no network calls
   const analyzer = createAnalyzer({}, () => { assert.fail('No network call should be made'); });
   await assert.rejects(analyzer.analyze({ text: 'A normal message for my friends.' }), error => error.code === 'AI_NOT_CONFIGURED');
 });
+
+test('blank keys are unconfigured and cannot trigger a provider request', async t => {
+  const analyzer = createAnalyzer({ apiKey: '  \t ' }, () => assert.fail('No network call should be made'));
+  t.after(() => analyzer.close());
+  assert.equal(analyzer.status().configured, false);
+  await assert.rejects(analyzer.analyze({ text: 'A normal message for my friends.' }), error => error.code === 'AI_NOT_CONFIGURED');
+});
+
+test('rejected keys and denied permissions have distinct actionable errors without leaking provider responses', async t => {
+  for (const [status, code, message] of [[401, 'PROVIDER_AUTH', /Replace GROQ_API_KEY/], [403, 'PROVIDER_PERMISSION', /organization and project model permissions/]]) {
+    const analyzer = createAnalyzer({ apiKey: 'test-only-placeholder' }, async () => new Response(JSON.stringify({ error: { message: 'private provider detail' } }), { status }));
+    t.after(() => analyzer.close());
+    await assert.rejects(analyzer.analyze({ text: 'A normal message for my friends.' }), error => error.code === code && message.test(error.message) && !error.message.includes('private provider detail'));
+  }
+});
 test('reuses identical completed requests and merges in-flight duplicates', async () => {
   let calls = 0;
   const analyzer = createAnalyzer({ apiKey: 'test-only-placeholder' }, async () => { calls++; await new Promise(resolve => setTimeout(resolve, 20)); return completion(assessment); });

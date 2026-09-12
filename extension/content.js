@@ -55,12 +55,15 @@
   }
   function schedule() { if (scheduled) return; scheduled = true; setTimeout(scan, 350); }
   globalThis.__novaScan = scan;
-  chrome.storage.local.get(['enabled', 'language']).then(settings => { enabled = settings.enabled !== false; language = settings.language === 'ur' ? 'ur' : 'en'; scan(); });
-  const observer = new MutationObserver(schedule); observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+  const ready = chrome.storage.local.get(['enabled', 'language']).then(settings => { enabled = settings.enabled !== false; language = settings.language === 'ur' ? 'ur' : 'en'; scan(); });
+  const observer = new MutationObserver(schedule); observer.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['data-view-name', 'data-id', 'data-urn', 'class'] });
   // Media can load after its post is inserted, without another DOM mutation.
   document.addEventListener('load', event => { if (event.target instanceof HTMLImageElement || event.target instanceof HTMLVideoElement) schedule(); }, true);
   chrome.storage.onChanged.addListener((changes, area) => { if (area !== 'local') return; if (changes.enabled) enabled = changes.enabled.newValue !== false; if (changes.language) language = changes.language.newValue === 'ur' ? 'ur' : 'en'; scan(); });
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.type === 'NOVA_SCAN') { scan(); sendResponse({ count, platform: adapter.name, enabled }); }
+    if (message.type === 'NOVA_SCAN') {
+      ready.then(() => { scan(); sendResponse({ count, platform: adapter.name, enabled }); });
+      return true;
+    }
   });
 })();

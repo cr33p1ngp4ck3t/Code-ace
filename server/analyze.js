@@ -59,7 +59,7 @@ function normalizeAssessment(raw, input, local) {
 }
 
 export function createAnalyzer(config = {}, fetcher = fetch) {
-  const apiKey = config.apiKey || '';
+  const apiKey = (config.apiKey || '').trim();
   const models = { text: config.textModel || 'openai/gpt-oss-120b', vision: config.visionModel || 'qwen/qwen3.6-27b', audio: config.audioModel || 'whisper-large-v3-turbo' };
   const cache = new Map(), pending = new Map(), minutes = [];
   const sweep = setInterval(() => { for (const [id, entry] of cache) if (entry.expires <= Date.now()) cache.delete(id); }, 60000);
@@ -81,7 +81,8 @@ export function createAnalyzer(config = {}, fetcher = fetch) {
         blockedUntil = Date.now() + wait * 1000;
         throw new AppError(429, `The AI service is busy. Try again in ${wait} seconds.`, 'PROVIDER_LIMIT', wait);
       }
-      if ([401, 403].includes(response.status)) throw new AppError(503, 'AI access needs setup. Check the backend key and model permissions.', 'PROVIDER_AUTH');
+      if (response.status === 401) throw new AppError(503, 'Groq rejected the API key. Replace GROQ_API_KEY in the backend .env file with a valid Groq key, then restart the backend and try again.', 'PROVIDER_AUTH');
+      if (response.status === 403) throw new AppError(503, 'Groq denied access to this AI request. Check your Groq organization and project model permissions for the models configured in .env.', 'PROVIDER_PERMISSION');
       throw new AppError(502, 'The AI service could not process this content. Check the configured models or try a smaller file.', 'PROVIDER_ERROR');
     }
     let data;
