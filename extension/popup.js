@@ -10,6 +10,11 @@ const copy = {
 };
 async function render() {
   const w = copy[language]; document.documentElement.lang = language; document.documentElement.dir = language === 'ur' ? 'rtl' : 'ltr';
+  let legend = $('#signal-legend');
+  if (!legend) { legend = document.createElement('div'); legend.id = 'signal-legend'; legend.className = 'signal-legend'; $('#hint').after(legend); }
+  legend.replaceChildren();
+  const signalLabels = language === 'ur' ? ['واضح خطرہ نہیں', 'جائزہ ضروری', 'مضبوط انتباہ'] : ['No obvious signs', 'Needs review', 'Strong warnings'];
+  ['green', 'yellow', 'red'].forEach((color, index) => { const item = document.createElement('span'), dot = document.createElement('i'); dot.className = color; dot.setAttribute('aria-hidden', 'true'); item.append(dot, document.createTextNode(signalLabels[index])); legend.append(item); });
   $('#language').value = language; $('#heading').textContent = w.heading; $('#intro').textContent = w.intro; $('#toggle-label').textContent = w.toggle; $('#hint').textContent = w.hint; $('#scan').textContent = w.scan; $('#studio').textContent = w.studio; $('#practice').textContent = w.practice; $('#flags-label').textContent = w.flags;
   const settings = await chrome.storage.local.get(['flags', 'enabled']); $('#enabled').checked = settings.enabled !== false;
   const flags = Array.isArray(settings.flags) ? settings.flags : [], list = $('#flags'); list.replaceChildren();

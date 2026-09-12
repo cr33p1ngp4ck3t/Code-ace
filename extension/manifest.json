@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Verifeed — Digital Shield",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Understand scam warning signs on X, Facebook, Instagram and LinkedIn. Local badges, optional text and media checks.",
   "permissions": [
     "storage",

@@ -46,6 +46,8 @@ On Windows/macOS, `npm run dev` watches `.env` and the server folder and restart
 
 The **AI writing & quality** section flags possible formulaic phrasing, repeated structures, generic claims, assistant-like wording, or explicit AI-writing disclosures. It shows source excerpts and remains separate from scam risk. Short text gets an insufficient-evidence result. These are writing observations, not proof of authorship or an AI percentage; see the [ACL study on social-post detection limits](https://aclanthology.org/2025.findings-acl.695/). Images, audio, and video can also be reviewed inside the panel. The toolbar still opens the full studio when wanted.
 
+Post pills include a visible traffic-light circle: **green ✓** means no obvious local warning signs, **yellow !** means review is needed (including possible AI-style writing), and **red !** means strong scam warning signs. Unchecked media or insufficient information uses **yellow ? / Not checked**. Green is not a safety guarantee; red is not confirmed fraud. The popup includes the color legend.
+
 ## Website redirect warnings
 
 Open the extension popup → **Website redirect warnings** → enable **Warn after website redirects**, then allow Chrome's website-access request. This optional feature works on HTTP/HTTPS websites beyond the four social platforms. It detects browser-reported HTTP and JavaScript/meta redirects; direct navigation and redirects inside embedded frames do not trigger it.
