@@ -1,5 +1,7 @@
 import { prepareFile, samplePoster } from './lib/media.js';
 import { copy } from './lib/i18n.js';
+import { initializeAccess, showServerAccess, hideServerAccess } from './lib/access.js';
+import '/shared/writing.js';
 
 const $ = selector => document.querySelector(selector);
 const state = { language: readStorage('nova-language', 'en') === 'ur' ? 'ur' : 'en', kind: 'text', media: null, sourceNotes: [], links: [], hasMedia: false, result: null, busy: false, savedResult: false, speaking: false };
@@ -93,6 +95,11 @@ function renderResult(loading = false) {
   const row = node('div', undefined, 'risk-row'); row.append(node('span', symbols[result.risk], 'risk-symbol'), node('h2', result.headline));
   header.append(row, node('p', `${t(result.source === 'ai' ? 'aiResult' : 'localResult')}${result.cached ? ` · ${t('cached')}` : ''}`, 'risk-source'));
   const body = node('div', undefined, 'result-body'); body.append(node('h3', t('why'), 'section-label'));
+  const writing = result.writing || VerifeedWriting.scan(inputSnapshot().text, state.language);
+  const writingPanel = node('section', undefined, 'writing-assessment');
+  writingPanel.append(node('h3', VerifeedWriting.copy[state.language].title, 'section-label'), node('h3', writing.headline));
+  for (const signal of writing.signals) { const item = node('article', undefined, 'reason'); item.append(node('h3', signal.title), node('p', signal.detail), node('blockquote', signal.evidence)); writingPanel.append(item); }
+  writingPanel.append(node('p', writing.limitation, 'writing-note'));
   if (!result.reasons.length) body.append(node('p', t(result.risk === 'unknown' && result.coverage.mediaUnchecked ? 'unchecked' : 'noReasons'), 'no-reasons'));
   for (const reason of result.reasons) { const article = node('article', undefined, 'reason'); article.append(node('h3', reason.title), node('p', reason.detail)); if (reason.evidence) article.append(node('blockquote', reason.evidence)); body.append(article); }
   const action = node('div', undefined, 'next-step'); action.append(node('h3', t('next')), node('p', result.action)); body.append(action, node('h3', t('coverage'), 'section-label'));
@@ -109,6 +116,7 @@ function renderResult(loading = false) {
   for (const [key, text] of [['transcript', result.transcript], ['observations', result.observations ? [result.observations.visibleText, ...result.observations.details, result.observations.limitations].filter(Boolean).join('\n\n') : '']]) {
     if (text) { const details = node('details', undefined, 'result-details'); details.append(node('summary', t(key)), node('p', text)); body.append(details); }
   }
+  body.append(writingPanel);
   const actions = node('div', undefined, 'result-actions');
   const listen = node('button', `♫ ${t('listen')}`, 'button secondary'); listen.id = 'listen-result'; listen.addEventListener('click', speakResult);
   const save = node('button', `⚑ ${t(state.savedResult ? 'savedAction' : 'save')}`, 'button secondary'); save.disabled = state.savedResult; save.addEventListener('click', saveResult);
@@ -126,6 +134,7 @@ async function runCheck(ai) {
     const response = await fetch('/api/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input), signal: AbortSignal.timeout(145000) });
     const data = await response.json();
     if (!response.ok) {
+      if (data.code === 'SERVER_ACCESS_REQUIRED') showServerAccess();
       if (['AI_NOT_CONFIGURED', 'PROVIDER_AUTH', 'PROVIDER_PERMISSION'].includes(data.code)) {
         $('#ai-status').textContent = data.error; $('#ai-status').className = 'setup-note';
       }
@@ -171,14 +180,15 @@ function applyLanguage() {
   renderExamples(); renderMedia(); renderSaved(); renderResult(); refreshStatus();
 }
 async function refreshStatus() {
-  try { const response = await fetch('/api/status'); if (!response.ok) throw new Error(); const status = await response.json(); $('#ai-status').textContent = t(status.configured ? 'keyLoaded' : 'missingKey'); $('#ai-status').className = 'setup-note'; }
+  try { const response = await fetch('/api/status'); if (!response.ok) throw new Error(); const status = await response.json(); if (status.requiresAccess && !status.authenticated) { showServerAccess(); $('#ai-status').textContent = state.language === 'ur' ? 'اے آئی جانچ کے لیے اپنے سرور سے جڑیں۔' : 'Connect to your server to use AI checks.'; } else { hideServerAccess(); $('#ai-status').textContent = t(status.configured ? 'keyLoaded' : 'missingKey'); } $('#ai-status').className = 'setup-note'; }
   catch { $('#ai-status').textContent = t('offline'); }
 }
 async function loadDraft() {
   const id = new URLSearchParams(location.search).get('draft'); if (!id) return;
-  history.replaceState(null, '', '/'); setBusy(true);
+  setBusy(true);
   try {
     const response = await fetch(`/api/drafts/${encodeURIComponent(id)}`); const draft = await response.json(); if (!response.ok) throw new Error(draft.error);
+    history.replaceState(null, '', '/');
     $('#content').value = draft.text; state.links = draft.links; state.sourceNotes = draft.notes; state.hasMedia = draft.hasMedia; updateCount();
     if (draft.files.length) {
       const file = draft.files[0], [prefix, base64] = file.dataUrl.split(','); const bytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
@@ -207,4 +217,5 @@ $('#dropzone').addEventListener('dragleave', () => $('#dropzone').classList.remo
 $('#dropzone').addEventListener('drop', event => { event.preventDefault(); $('#dropzone').classList.remove('dragging'); if (!state.busy && event.dataTransfer.files[0]) attachFile(event.dataTransfer.files[0]); });
 $('#language').addEventListener('change', () => { state.language = $('#language').value; writeStorage('nova-language', state.language); invalidate(); applyLanguage(); });
 window.addEventListener('pagehide', stopSpeech);
-applyLanguage(); loadDraft();
+window.addEventListener('nova-connected', () => { refreshStatus(); loadDraft(); });
+applyLanguage(); initializeAccess().then(ready => { refreshStatus(); if (ready) loadDraft(); });

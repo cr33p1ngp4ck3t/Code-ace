@@ -1,0 +1,10 @@
+{
+  "checkedAt": "2026-09-12T10:44:42.851Z",
+  "backend": "http://127.0.0.1:4318",
+  "checks": [
+    "Renamed extension connects to Oracle through its default tunnel address",
+    "Open review studio uses the Oracle backend",
+    "Post review imports image media into the same-tab panel using Oracle configuration",
+    "Connecting, scrolling, and importing a post spend no AI checks"
+  ]
+}

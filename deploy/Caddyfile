@@ -1,0 +1,7 @@
+# Replace this example hostname with the domain pointing to your Oracle public IP.
+verifeed.example.com {
+    request_body {
+        max_size 15MB
+    }
+    reverse_proxy 127.0.0.1:4317
+}

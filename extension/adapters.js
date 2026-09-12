@@ -6,7 +6,7 @@
     { name: 'LinkedIn', hosts: ['www.linkedin.com', 'linkedin.com'], posts: '[data-view-name="feed-full-update"], [data-id^="urn:li:activity:"], .feed-shared-update-v2, .occludable-update, [data-urn^="urn:li:activity:"]', text: '.update-components-text, .feed-shared-update-v2__description, .feed-shared-text', images: 'img', permalink: 'a[href*="/feed/update/"], a[href*="/posts/"]' },
     { name: 'Practice feed', hosts: ['127.0.0.1', 'localhost'], posts: '[data-nova-post]', text: '[data-post-text]', images: '[data-post-media] img, img[data-post-media]', permalink: 'a[data-post-link]' }
   ];
-  function adapterFor(hostname = location.hostname) { return adapters.find(adapter => adapter.hosts.includes(hostname)) || null; }
+  function adapterFor(hostname = location.hostname) { return adapters.find(adapter => adapter.hosts.includes(hostname)) || (location.pathname.startsWith('/demo') && document.querySelector('[data-nova-post]') ? adapters.at(-1) : null); }
   function extractPost(element, adapter) {
     const copy = element.cloneNode(true); copy.querySelectorAll('[data-nova-host], script, style, nav').forEach(node => node.remove());
     const textNodes = [...copy.querySelectorAll(adapter.text)];

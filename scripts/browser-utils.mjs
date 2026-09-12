@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { chromium } from 'playwright';
 
 export async function chromiumPath() {
-  if (process.env.NOVA_BROWSER_EXECUTABLE) return process.env.NOVA_BROWSER_EXECUTABLE;
+  if (process.env.VERIFEED_BROWSER_EXECUTABLE || process.env.NOVA_BROWSER_EXECUTABLE) return process.env.VERIFEED_BROWSER_EXECUTABLE || process.env.NOVA_BROWSER_EXECUTABLE;
   const installed = chromium.executablePath();
   if (await access(installed).then(() => true).catch(() => false)) return installed;
   if (process.platform === 'win32' && process.env.LOCALAPPDATA) {

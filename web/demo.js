@@ -1,5 +1,5 @@
 const status = document.querySelector('#extension-status');
-const observer = new MutationObserver(() => { const count = document.querySelectorAll('[data-nova-host]').length; if (count) status.textContent = `Nova is active · ${count} posts checked locally. No AI calls used.`; });
+const observer = new MutationObserver(() => { const count = document.querySelectorAll('[data-nova-host]').length; if (count) status.textContent = `Verifeed is active · ${count} posts checked locally. No AI calls used.`; });
 observer.observe(document.querySelector('.social-feed'), { subtree: true, childList: true });
 document.querySelector('#load-post').addEventListener('click', () => {
   const post = document.createElement('article'); post.dataset.novaPost = '';

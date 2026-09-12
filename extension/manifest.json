@@ -1,20 +1,76 @@
 {
   "manifest_version": 3,
-  "name": "Nova — Digital Shield",
-  "version": "0.1.1",
+  "name": "Verifeed — Digital Shield",
+  "version": "0.3.0",
   "description": "Understand scam warning signs on X, Facebook, Instagram and LinkedIn. Local badges, optional text and media checks.",
-  "permissions": ["storage", "activeTab", "scripting", "contextMenus"],
-  "host_permissions": [
-    "http://127.0.0.1/*", "http://localhost/*",
-    "https://x.com/*", "https://twitter.com/*", "https://www.facebook.com/*", "https://facebook.com/*", "https://www.instagram.com/*", "https://instagram.com/*", "https://www.linkedin.com/*", "https://linkedin.com/*",
-    "https://pbs.twimg.com/*", "https://video.twimg.com/*", "https://*.fbcdn.net/*", "https://*.cdninstagram.com/*", "https://media.licdn.com/*", "https://dms.licdn.com/*"
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "contextMenus"
   ],
-  "background": { "service_worker": "background.js", "type": "module" },
-  "action": { "default_popup": "popup.html", "default_title": "Nova — Digital Shield", "default_icon": { "16": "icons/16.png", "32": "icons/32.png" } },
-  "icons": { "16": "icons/16.png", "32": "icons/32.png", "48": "icons/48.png", "128": "icons/128.png" },
-  "content_scripts": [{
-    "matches": ["https://x.com/*", "https://twitter.com/*", "https://www.facebook.com/*", "https://facebook.com/*", "https://www.instagram.com/*", "https://instagram.com/*", "https://www.linkedin.com/*", "https://linkedin.com/*", "http://127.0.0.1/demo*", "http://localhost/demo*"],
-    "js": ["shared/rules.js", "adapters.js", "content.js"],
-    "run_at": "document_idle"
-  }]
+  "optional_host_permissions": [
+    "https://*/*"
+  ],
+  "web_accessible_resources": [{ "resources": ["review.html"], "matches": ["http://*/*", "https://*/*"] }],
+  "host_permissions": [
+    "http://127.0.0.1/*",
+    "http://localhost/*",
+    "https://x.com/*",
+    "https://twitter.com/*",
+    "https://www.facebook.com/*",
+    "https://facebook.com/*",
+    "https://www.instagram.com/*",
+    "https://instagram.com/*",
+    "https://www.linkedin.com/*",
+    "https://linkedin.com/*",
+    "https://pbs.twimg.com/*",
+    "https://video.twimg.com/*",
+    "https://*.fbcdn.net/*",
+    "https://*.cdninstagram.com/*",
+    "https://media.licdn.com/*",
+    "https://dms.licdn.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Verifeed — Digital Shield",
+    "default_icon": {
+      "16": "icons/16.png",
+      "32": "icons/32.png"
+    }
+  },
+  "icons": {
+    "16": "icons/16.png",
+    "32": "icons/32.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://x.com/*",
+        "https://twitter.com/*",
+        "https://www.facebook.com/*",
+        "https://facebook.com/*",
+        "https://www.instagram.com/*",
+        "https://instagram.com/*",
+        "https://www.linkedin.com/*",
+        "https://linkedin.com/*",
+        "http://127.0.0.1/demo*",
+        "http://localhost/demo*"
+      ],
+      "js": [
+        "shared/rules.js",
+        "shared/writing.js",
+        "adapters.js",
+        "panel.js",
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
 }

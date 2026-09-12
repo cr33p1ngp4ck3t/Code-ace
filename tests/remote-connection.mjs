@@ -1,0 +1,32 @@
+import assert from 'node:assert/strict';
+import { chromium } from 'playwright';
+import { resolve } from 'node:path';
+import { chromiumPath } from '../scripts/browser-utils.mjs';
+import { makeServer } from '../server/index.js';
+const accessToken = 'test-only-server-access-code-0123456789abcdef';
+const server = makeServer({ accessToken }); await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+const base = `http://127.0.0.1:${server.address().port}`;
+const extension = resolve('extension');
+let context;
+try {
+  context = await chromium.launchPersistentContext('', { executablePath: await chromiumPath(), headless: true, args: [`--disable-extensions-except=${extension}`, `--load-extension=${extension}`] });
+  const worker = context.serviceWorkers()[0] || await context.waitForEvent('serviceworker');
+  const id = new URL(worker.url()).host;
+  const popup = await context.newPage(); await popup.goto(`chrome-extension://${id}/popup.html`);
+  await popup.locator('.connection summary').click(); await popup.locator('#backend-url').fill(base); await popup.locator('#backend-code').fill(accessToken); await popup.locator('#save-backend').click();
+  await popup.waitForFunction(() => document.querySelector('#connection-status').textContent.startsWith('Connected.'));
+  assert.equal(await popup.locator('#practice').getAttribute('href'), `${base}/demo`);
+  const created = context.waitForEvent('page'); await popup.locator('#studio').click(); const studio = await created;
+  await studio.waitForURL(`${base}/**`); await studio.waitForFunction(() => !location.hash && document.querySelector('#ai-status')?.textContent.includes('Local checks are ready'));
+  assert.ok(!studio.url().includes(accessToken)); assert.equal(await studio.locator('#server-access:visible').count(), 0);
+  const session = (await context.cookies(base)).find(cookie => cookie.name === 'nova_session'); assert.ok(session?.httpOnly);
+  console.log('PASS Configurable extension backend authenticates via a single-use studio ticket');
+  const feed = await context.newPage(); await feed.goto(`${base}/demo`); await feed.waitForSelector('#post-internship .wrap.high');
+  const tabCount = context.pages().length; await feed.locator('#post-internship [data-nova-host] button').click();
+  const imported = feed.frameLocator('[data-verifeed-panel] iframe'); await imported.locator('#post-text').filter({ hasText: 'registration fee' }).waitFor({ state: 'attached' });
+  assert.equal(context.pages().length, tabCount);
+  console.log('PASS Feed review opens in the same tab with the selected backend configuration');
+  const fresh = await context.browser().newContext(); const direct = await fresh.newPage(); await direct.goto(base); await direct.locator('#server-access').waitFor({ state: 'visible' });
+  await direct.locator('#server-access-code').fill(accessToken); await direct.locator('#server-access button').click(); await direct.waitForFunction(() => document.querySelector('#server-access').hidden);
+  await fresh.close(); console.log('PASS A directly opened protected studio supports server-code sign-in');
+} finally { await context?.close(); await new Promise(resolve => server.close(resolve)); }

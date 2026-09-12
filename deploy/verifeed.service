@@ -1,0 +1,22 @@
+[Unit]
+Description=Verifeed Digital Shield backend
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=opc
+WorkingDirectory=/home/opc/Code-ace
+Environment=NODE_ENV=production
+# Adjust this executable if `command -v node` gives a different path.
+ExecStart=/usr/bin/node --env-file=.env server/index.js
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

@@ -1,8 +1,10 @@
-# Nova · Digital Shield
+# Verifeed · Digital Shield
 
 ## Product
 
 A browser extension puts an understandable scam-risk badge beside posts. Local checks cost no tokens. A review studio analyzes only content the user explicitly submits. A listen button, English/Urdu interface, icon-and-text risk labels, and one concrete next action serve people with limited digital literacy.
+
+The feed control is now a compact pill at each post's bottom-right. It opens a same-tab dialog for text and media review, dismissed only by its × control. The AI-writing section explains possible formulaic/low-information writing with exact excerpts and uncertain authorship; it never treats AI-like style as scam evidence. Writing assessment shares the existing Groq request.
 
 Scam risk and media origin are separate. Green means no obvious warning signs in the checked material, never verified safety. Gray means insufficient evidence. Image analysis and transcription do not establish authentic media, voice identity, or whether AI created it.
 
@@ -10,7 +12,7 @@ Scam risk and media origin are separate. Green means no obvious warning signs in
 
 1. Shared local rules: combinations of credential requests, advance fees, job/prize offers, investment promises, urgency and suspicious links. Explanations show observed evidence; ordinary grammar, emoji and AI disclosure are not scam signals.
 2. Manifest V3 extension: X/Twitter, Facebook, Instagram, and LinkedIn feed adapters, badges in isolated shadow roots, dynamic post detection, manual scan, right-click text/image review, local flagging. Platform markup is subject to change; test against authenticated live feeds before presenting full platform compatibility as verified.
-3. Local Node backend: secrets in `.env`, fixed Groq endpoints, validated inputs/outputs, bounded in-memory cache, duplicate request protection, request/token budgets and timeouts. No database or third-party runtime dependencies.
+3. Node backend on Oracle Cloud, reached by the local extension through SSH forwarding: secrets in the server `.env`, fixed Groq endpoints, validated inputs/outputs, bounded in-memory cache, duplicate request protection, request/token budgets and timeouts. The popup saves the selected backend address. Optional HTTPS access uses a separate server code and one-time studio connection tickets. No database or third-party runtime dependencies.
 4. Media studio: paste text, upload images/audio/video, preview exactly what will be sent, explicit AI button, honest coverage and errors. No media uploads during automatic feed scanning.
 5. English/Urdu, device speech where a matching voice exists, keyboard access and mobile-responsive studio. The extension itself targets desktop Chromium browsers.
 6. Practice feed and tests: real local rules; AI results only from actual configured API calls. Mock responses are confined to automated tests.
@@ -41,10 +43,10 @@ Scroll the practice feed → see instant badges without cloud calls → review a
 - https://console.groq.com/docs/production-readiness/security-onboarding
 - https://developer.chrome.com/docs/extensions/develop/concepts/network-requests
 
-Model availability depends on the Groq account and can change; all three IDs are configurable. Live API validation requires a key. The backend binds only to `127.0.0.1:4317`; public deployment needs authentication and durable quotas before exposure.
+Model availability depends on the Groq account and can change; all three IDs are configurable. The Oracle backend binds to `127.0.0.1:4317` and runs under systemd as `verifeed`. The extension defaults to the local SSH tunnel at `127.0.0.1:4318`. Public HTTPS mode requires a server access code; durable quotas and individual user accounts remain future work.
 
 ## Implemented and verified
 
-The extension, studio, all four platform adapters, multimodal pipeline, English/Urdu interface, private flags, practice media, and setup documentation are implemented. JavaScript/JSON checks, 20 unit/integration tests, and 13 browser checks pass. Browser checks use the real unpacked extension and real media preparation with a simulated provider. They include missing audio, injected model-output markup, duplicate requests, dynamic feeds, and all four platform DOM fixtures.
+The extension, studio, all four platform adapters, multimodal pipeline, English/Urdu interface, private flags, practice media, configurable backend, and Oracle deployment are implemented. JavaScript/JSON checks, 33 unit/integration tests, 13 browser checks, five extension setup checks, three server connection checks, and five same-tab panel checks pass. These cover actual extension loading, media preparation, dismissal behavior, writing evidence, provider errors, and representative platform DOM fixtures. Automated provider responses are test doubles; live Oracle checks are recorded separately.
 
-Remaining external validation: provide a Groq key for real model calls, and check extraction against the user's authenticated live social feeds. This does not include forensic AI-origin/deepfake/voice-clone detection.
+Live text, image, audio, and video checks all passed through the Oracle backend on September 12, 2026, using its configured Groq key. Results are recorded separately in `artifacts/live-check-results.json`. Remaining external validation: extraction against the user's authenticated live social feeds. This does not include forensic AI-origin/deepfake/voice-clone detection.

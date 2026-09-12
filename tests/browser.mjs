@@ -17,7 +17,8 @@ const provider = async (url, options) => {
   return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify(value) } }], usage: { total_tokens: 100 } }));
 };
 const server = makeServer({ apiKey: 'test-only-placeholder', maxMinute: 30, maxTokens: 500000 }, provider);
-await new Promise((resolve, reject) => { server.once('error', reject); server.listen(4317, '127.0.0.1', resolve); });
+await new Promise((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolve); });
+const base = `http://127.0.0.1:${server.address().port}`;
 const executablePath = await chromiumPath();
 const extension = resolve('extension');
 let context;
@@ -27,10 +28,11 @@ try {
   context = await chromium.launchPersistentContext('', { executablePath, headless: true, viewport: { width: 1440, height: 1100 }, args: [`--disable-extensions-except=${extension}`, `--load-extension=${extension}`, '--autoplay-policy=no-user-gesture-required'] });
   const worker = context.serviceWorkers().find(worker => worker.url().startsWith('chrome-extension:')) || await context.waitForEvent('serviceworker', { timeout: 15000 });
   const extensionId = new URL(worker.url()).host;
+  await worker.evaluate(url => chrome.storage.local.set({ backendUrl: url }), base);
   passed('Manifest V3 extension loads with its service worker');
   const page = await context.newPage(), errors = [];
   page.on('pageerror', error => errors.push(error.message));
-  await page.goto('http://127.0.0.1:4317/');
+  await page.goto(base);
   await page.waitForFunction(() => document.querySelector('#ai-status').textContent.includes('AI key loaded'));
   await page.screenshot({ path: 'artifacts/studio-desktop.png', fullPage: true });
   await page.getByRole('button', { name: 'A suspicious offer' }).click();
@@ -99,21 +101,21 @@ try {
   assert.match(await page.locator('.risk-source').textContent(), /Local check/); providerFails = false;
   passed('Provider failures show an error and preserve a labeled local result');
 
-  const feed = await context.newPage(); await feed.goto('http://127.0.0.1:4317/demo');
+  const feed = await context.newPage(); await feed.goto(`${base}/demo`);
   await feed.waitForFunction(() => document.querySelectorAll('[data-nova-host]').length === 7);
   assert.equal(await feed.locator('#post-internship .wrap.high').count(), 1);
   assert.equal(await feed.locator('#post-ordinary .wrap.low').count(), 1);
   assert.equal(await feed.locator('#post-image .wrap.unknown').count(), 1);
   const before = providerCalls.length; await feed.locator('#load-post').click(); await feed.waitForFunction(() => document.querySelectorAll('[data-nova-host]').length === 8); assert.equal(providerCalls.length, before);
-  await feed.locator('#post-internship').getByRole('button', { name: 'Why?', exact: true }).click();
   await feed.screenshot({ path: 'artifacts/extension-practice-feed.png', fullPage: true });
   passed('Real extension adds risk badges, handles dynamic posts and makes no AI calls');
 
-  const importedPagePromise = context.waitForEvent('page');
-  await feed.locator('#post-image').getByRole('button', { name: 'Open full check', exact: true }).click();
-  const imported = await importedPagePromise; await imported.waitForLoadState(); await imported.waitForSelector('.media-thumbnails img');
-  assert.equal(providerCalls.length, before); assert.match(await imported.locator('#content').inputValue(), /poster/);
-  passed('Extension imports an actual post image into the studio without analyzing it automatically');
+  const tabCount = context.pages().length;
+  await feed.locator('#post-image [data-nova-host] button').click();
+  const imported = feed.frameLocator('[data-verifeed-panel] iframe'); await imported.locator('#media-preview img').waitFor();
+  assert.equal(providerCalls.length, before); assert.equal(context.pages().length, tabCount); assert.match(await imported.locator('#post-text').textContent(), /poster/);
+  await feed.getByRole('button', { name: 'Close review', exact: true }).click();
+  passed('Extension imports a post image into the same-tab panel without automatically analyzing it');
 
   const popup = await context.newPage(); await popup.goto(`chrome-extension://${extensionId}/popup.html`);
   await popup.locator('#enabled').uncheck(); await feed.waitForFunction(() => !document.querySelector('[data-nova-host]'));

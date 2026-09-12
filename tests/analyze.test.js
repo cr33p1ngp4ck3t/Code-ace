@@ -54,7 +54,7 @@ test('image and audio observations feed GPT-OSS; application keeps media origin 
   const result = await analyzer.analyze({ kind: 'video', images: [{ dataUrl: png, seconds: 1 }, { dataUrl: png, seconds: 3 }], audio: { dataUrl: wav(2) } });
   assert.equal(calls.length, 3); assert.equal(result.coverage.videoFrames, 2); assert.equal(result.coverage.audioSeconds, 2); assert.equal(result.coverage.images, 0);
   assert.equal(result.authenticity, 'unverified'); assert.equal(result.risk, 'high');
-  const final = JSON.parse(calls.at(-1).options.body); assert.equal(final.model, 'openai/gpt-oss-120b'); assert.match(final.messages[1].content, /Send your OTP/); assert.equal(final.tools, undefined);
+  const final = JSON.parse(calls.at(-1).options.body); assert.equal(final.model, 'openai/gpt-oss-120b'); assert.match(final.messages.find(message => message.role === 'user').content, /Send your OTP/); assert.equal(final.tools, undefined);
   assert.ok(calls[1].options.body instanceof FormData); assert.equal(calls[1].options.body.get('file').type, 'audio/wav');
 });
 test('uninspected attachments cannot become green through a caption-only AI response', async () => {

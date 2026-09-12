@@ -1,16 +1,17 @@
-const BACKEND = 'http://127.0.0.1:4317';
+import { getBackend } from './backend.js';
 const FEED_HOSTS = new Set(['x.com', 'twitter.com', 'www.facebook.com', 'facebook.com', 'www.instagram.com', 'instagram.com', 'www.linkedin.com', 'linkedin.com', '127.0.0.1', 'localhost']);
-function supportedPage(raw) { try { const url = new URL(raw); return FEED_HOSTS.has(url.hostname) && (url.protocol === 'https:' || (['127.0.0.1', 'localhost'].includes(url.hostname) && url.protocol === 'http:' && url.port === '4317')); } catch { return false; } }
-function allowedMedia(raw) {
+function supportedPage(raw) { try { const url = new URL(raw); return FEED_HOSTS.has(url.hostname) && (url.protocol === 'https:' || (['127.0.0.1', 'localhost'].includes(url.hostname) && url.protocol === 'http:' && url.pathname.startsWith('/demo'))); } catch { return false; } }
+function allowedMedia(raw, backend) {
   try {
     const url = new URL(raw); if (url.username || url.password) return false;
+    if (url.origin === backend.url && url.pathname.startsWith('/assets/')) return true;
     if (url.protocol === 'http:') return ['127.0.0.1', 'localhost'].includes(url.hostname) && url.port === '4317' && url.pathname.startsWith('/assets/');
     if (url.protocol !== 'https:') return false;
     return ['pbs.twimg.com', 'video.twimg.com', 'media.licdn.com', 'dms.licdn.com'].includes(url.hostname) || ['fbcdn.net', 'cdninstagram.com'].some(domain => url.hostname.endsWith(`.${domain}`));
   } catch { return false; }
 }
-async function fetchAttachment(media) {
-  if (!allowedMedia(media?.src)) throw new Error('This platform did not expose an accessible media file. Upload the original file to include it.');
+async function fetchAttachment(media, backend) {
+  if (!allowedMedia(media?.src, backend)) throw new Error('This platform did not expose an accessible media file. Upload the original file to include it.');
   const response = await fetch(media.src, { credentials: 'omit', redirect: 'error', signal: AbortSignal.timeout(15000) });
   if (!response.ok) throw new Error('The post’s media could not be retrieved. Upload the file to include it.');
   if (Number(response.headers.get('content-length')) > 9000000) throw new Error('This attachment is too large to import automatically. Upload a shorter clip or smaller image.');
@@ -25,28 +26,19 @@ async function fetchAttachment(media) {
   let binary = ''; for (let i = 0; i < bytes.length; i += 8192) binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
   return { name: `post-${media.kind || 'media'}.${formats[mime]}`, dataUrl: `data:${mime};base64,${btoa(binary)}` };
 }
-let opening = false;
-async function openReview(post) {
-  if (opening) throw new Error('A review is already opening. Please wait.');
-  opening = true;
-  try {
-    const draft = { text: typeof post?.text === 'string' ? post.text.slice(0, 6000) : '', links: Array.isArray(post?.links) ? post.links.filter(x => typeof x === 'string' && x.length < 2000).slice(0, 8) : [], hasMedia: Boolean(post?.hasMedia), files: [], notes: [] };
-    const media = Array.isArray(post?.media) ? post.media.slice(0, 4) : [];
-    if (media.length) {
-      try { draft.files.push(await fetchAttachment(media[0])); } catch (error) { draft.notes.push(error.message); }
-      if (media.length > 1) draft.notes.push('Only the first attachment was imported. Other post media has not been checked.');
-    }
-    let response;
-    try { response = await fetch(`${BACKEND}/api/drafts`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(draft), signal: AbortSignal.timeout(15000) }); }
-    catch { throw new Error('Start the Nova backend with npm start, then open this check again.'); }
-    const data = await response.json(); if (!response.ok) throw new Error(data.error || 'This review could not be opened.');
-    await chrome.tabs.create({ url: `${BACKEND}/?draft=${encodeURIComponent(data.id)}` });
-  } finally { opening = false; }
+const panelDrafts = new Map();
+function panelDraft(post, tabId, language) {
+  for (const [id, draft] of panelDrafts) if (draft.expires < Date.now()) panelDrafts.delete(id);
+  if (panelDrafts.size >= 20) panelDrafts.delete(panelDrafts.keys().next().value);
+  const id = crypto.randomUUID();
+  const data = { text: typeof post?.text === 'string' ? post.text.slice(0, 6000) : '', links: Array.isArray(post?.links) ? post.links.filter(x => typeof x === 'string' && x.length < 2000).slice(0, 8) : [], media: Array.isArray(post?.media) ? post.media.slice(0, 4).map(item => ({ kind: String(item?.kind || '').slice(0, 10), src: String(item?.src || '').slice(0, 4000) })) : [], hasMedia: Boolean(post?.hasMedia), permalink: String(post?.permalink || '').slice(0, 2000), platform: String(post?.platform || 'Selected content').slice(0, 60) };
+  panelDrafts.set(id, { post: data, tabId, language: language === 'ur' ? 'ur' : 'en', expires: Date.now() + 60000 });
+  return id;
 }
 chrome.runtime.onInstalled.addListener(async () => {
   chrome.contextMenus.removeAll(() => {
-    chrome.contextMenus.create({ id: 'nova-selection', title: 'Review selected text with Nova', contexts: ['selection'] });
-    chrome.contextMenus.create({ id: 'nova-image', title: 'Review this image with Nova', contexts: ['image'] });
+    chrome.contextMenus.create({ id: 'nova-selection', title: 'Review selected text with Verifeed', contexts: ['selection'] });
+    chrome.contextMenus.create({ id: 'nova-image', title: 'Review this image with Verifeed', contexts: ['image'] });
   });
   // Tabs that were open before installation do not receive declarative scripts.
   const script = chrome.runtime.getManifest().content_scripts[0];
@@ -57,11 +49,28 @@ chrome.runtime.onInstalled.addListener(async () => {
 });
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (!['nova-selection', 'nova-image'].includes(info.menuItemId)) return;
-  try { await openReview({ text: info.selectionText || '', links: [], hasMedia: info.menuItemId === 'nova-image', media: info.menuItemId === 'nova-image' ? [{ kind: 'image', src: info.srcUrl }] : [] }); }
+  try {
+    await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: chrome.runtime.getManifest().content_scripts[0].js });
+    await chrome.tabs.sendMessage(tab.id, { type: 'VERIFEED_CONTEXT_REVIEW', post: { text: info.selectionText || '', links: [], hasMedia: info.menuItemId === 'nova-image', media: info.menuItemId === 'nova-image' ? [{ kind: 'image', src: info.srcUrl }] : [] } }, { frameId: 0 });
+  }
   catch (error) { await chrome.storage.session.set({ lastError: error.message }); await chrome.action.setBadgeText({ text: '!' }); await chrome.action.setBadgeBackgroundColor({ color: '#ad6845' }); }
 });
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message?.type !== 'NOVA_REVIEW' || sender.id !== chrome.runtime.id || !sender.tab || sender.frameId !== 0 || !supportedPage(sender.tab.url)) return;
-  openReview(message.post).then(() => sendResponse({ ok: true })).catch(error => sendResponse({ ok: false, error: error.message }));
+  if (sender.id !== chrome.runtime.id || !sender.tab) return;
+  if (message?.type === 'VERIFEED_PANEL_START' && sender.frameId === 0) {
+    sendResponse({ ok: true, id: panelDraft(message.post, sender.tab.id, message.language) }); return;
+  }
+  if (message?.type !== 'VERIFEED_PANEL_CLAIM' || sender.frameId === 0 || sender.url?.split(/[?#]/)[0] !== chrome.runtime.getURL('review.html')) return;
+  const draft = panelDrafts.get(message.id);
+  if (!draft || draft.tabId !== sender.tab.id || draft.expires < Date.now()) { sendResponse({ ok: false, error: 'This review expired. Close it with × and open the post again.' }); return; }
+  panelDrafts.delete(message.id);
+  (async () => {
+    const notes = []; let file = null;
+    if (draft.post.media.length) {
+      try { file = await fetchAttachment(draft.post.media[0], await getBackend()); } catch (error) { notes.push(error.message); }
+      if (draft.post.media.length > 1) notes.push('Only the first attachment was included. Other attachments have not been checked.');
+    }
+    return { ok: true, post: draft.post, language: draft.language, file, notes };
+  })().then(sendResponse).catch(error => sendResponse({ ok: false, error: error.message }));
   return true;
 });

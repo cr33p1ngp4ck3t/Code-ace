@@ -1,5 +1,5 @@
 {
-  "name": "nova-digital-shield",
+  "name": "verifeed",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -13,6 +13,8 @@
     "test": "node --test tests/*.test.js",
     "test:browser": "node tests/browser.mjs",
     "test:extension": "node tests/extension-setup.mjs",
+    "test:remote": "node tests/remote-connection.mjs",
+    "test:panel": "node tests/panel.mjs",
     "check": "node scripts/check.mjs"
   },
   "devDependencies": {

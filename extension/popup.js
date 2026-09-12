@@ -1,3 +1,6 @@
+import { getBackend, openStudio } from './backend.js';
+import { mountConnection } from './connection.js';
+
 const $ = selector => document.querySelector(selector);
 let language = 'en';
 const copy = {
@@ -14,22 +17,28 @@ async function render() {
 }
 $('#language').addEventListener('change', async () => { language = $('#language').value; await chrome.storage.local.set({ language }); render(); });
 $('#enabled').addEventListener('change', () => chrome.storage.local.set({ enabled: $('#enabled').checked }));
-$('#studio').addEventListener('click', () => chrome.tabs.create({ url: 'http://127.0.0.1:4317/' }));
+$('#studio').addEventListener('click', () => openStudio().catch(error => { $('#status').textContent = error.message; }));
+$('#practice').addEventListener('click', event => { event.preventDefault(); openStudio(true).catch(error => { $('#status').textContent = error.message; }); });
+const updatePracticeLink = () => getBackend().then(backend => { $('#practice').href = `${backend.url}/demo`; }).catch(() => {});
+updatePracticeLink();
+chrome.storage.onChanged.addListener((changes, area) => { if (area === 'local' && changes.backendUrl) updatePracticeLink(); });
+mountConnection();
 async function scanCurrentFeed() {
   $('#scan').disabled = true;
   $('#status').textContent = language === 'ur' ? 'فیڈ دیکھی جا رہی ہے…' : 'Looking for posts on this tab…';
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     const url = new URL(tab.url || 'about:blank');
-    const localFeed = ['127.0.0.1', 'localhost'].includes(url.hostname) && url.protocol === 'http:' && url.port === '4317' && url.pathname.startsWith('/demo');
+    const backend = await getBackend();
+    const localFeed = url.pathname.startsWith('/demo') && (url.origin === backend.url || (['127.0.0.1', 'localhost'].includes(url.hostname) && url.protocol === 'http:'));
     const socialFeed = url.protocol === 'https:' && ['x.com', 'twitter.com', 'www.facebook.com', 'facebook.com', 'www.instagram.com', 'instagram.com', 'www.linkedin.com', 'linkedin.com'].includes(url.hostname);
     if (!localFeed && !socialFeed) { $('#status').textContent = copy[language].unsupported; return; }
     let response;
     try { response = await chrome.tabs.sendMessage(tab.id, { type: 'NOVA_SCAN' }); }
-    catch { await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['shared/rules.js', 'adapters.js', 'content.js'] }); }
+    catch { await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: chrome.runtime.getManifest().content_scripts[0].js }); }
     response ||= await chrome.tabs.sendMessage(tab.id, { type: 'NOVA_SCAN' });
     $('#status').textContent = !response.enabled ? copy[language].off : response.count ? (language === 'ur' ? `${response.count} پوسٹس چیک ہوئیں۔ اے آئی استعمال نہیں ہوا۔` : `${response.count} posts checked. No AI calls used.`) : copy[language].noPosts;
-  } catch { $('#status').textContent = language === 'ur' ? 'Nova اس ٹیب سے جڑ نہیں سکا۔ ایکسٹینشن کو اس سائٹ کی اجازت دیں، صفحہ ریفریش کریں اور دوبارہ کوشش کریں۔' : 'Nova could not connect to this tab. Allow Nova access to this site in the browser extension settings, refresh the feed, and try again.'; }
+  } catch { $('#status').textContent = language === 'ur' ? 'Verifeed اس ٹیب سے جڑ نہیں سکا۔ ایکسٹینشن کو اس سائٹ کی اجازت دیں، صفحہ ریفریش کریں اور دوبارہ کوشش کریں۔' : 'Verifeed could not connect to this tab. Allow Verifeed access to this site in the browser extension settings, refresh the feed, and try again.'; }
   finally { $('#scan').disabled = false; }
 }
 $('#scan').addEventListener('click', scanCurrentFeed);

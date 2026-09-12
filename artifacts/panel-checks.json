@@ -1,0 +1,11 @@
+{
+  "checkedAt": "2026-09-12T10:41:15.442Z",
+  "provider": "test double",
+  "checks": [
+    "One compact control per post; scrolling makes no AI calls",
+    "Same-tab dialog survives outside clicks and Escape, including focus inside the frame",
+    "Explicit analysis shows separate scam and writing results; only × dismisses it",
+    "Images, audio, and video prepare and analyze inside the same-tab panel",
+    "Writing cue stays separate from scam risk, and provider errors preserve local evidence"
+  ]
+}

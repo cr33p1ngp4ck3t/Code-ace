@@ -1,0 +1,104 @@
+{
+  "checkedAt": "2026-09-12T09:37:33.005Z",
+  "backend": "http://127.0.0.1:4318",
+  "provider": "live Groq API",
+  "results": [
+    {
+      "kind": "text",
+      "status": 200,
+      "seconds": 0.92,
+      "source": "ai",
+      "risk": "high",
+      "cached": false,
+      "coverage": {
+        "text": true,
+        "images": 0,
+        "videoFrames": 0,
+        "frameTimes": [],
+        "audioSeconds": 0,
+        "mediaUnchecked": false
+      },
+      "reasons": [
+        "Upfront payment required",
+        "No interview or screening"
+      ],
+      "transcriptPresent": false,
+      "observationsPresent": false,
+      "authenticity": "unverified"
+    },
+    {
+      "kind": "image",
+      "status": 200,
+      "seconds": 2.21,
+      "source": "ai",
+      "risk": "high",
+      "cached": false,
+      "coverage": {
+        "text": false,
+        "images": 1,
+        "videoFrames": 0,
+        "frameTimes": [],
+        "audioSeconds": 0,
+        "mediaUnchecked": false
+      },
+      "reasons": [
+        "Upfront payment required",
+        "Guarantee without interview",
+        "Explicit scam disclaimer"
+      ],
+      "transcriptPresent": false,
+      "observationsPresent": true,
+      "authenticity": "unverified"
+    },
+    {
+      "kind": "audio",
+      "status": 200,
+      "seconds": 2.17,
+      "source": "ai",
+      "risk": "high",
+      "cached": false,
+      "coverage": {
+        "text": false,
+        "images": 0,
+        "videoFrames": 0,
+        "frameTimes": [],
+        "audioSeconds": 13.785,
+        "mediaUnchecked": false
+      },
+      "reasons": [
+        "Requests OTP",
+        "Threat of account block"
+      ],
+      "transcriptPresent": true,
+      "observationsPresent": false,
+      "authenticity": "unverified"
+    },
+    {
+      "kind": "video",
+      "status": 200,
+      "seconds": 3.11,
+      "source": "ai",
+      "risk": "high",
+      "cached": false,
+      "coverage": {
+        "text": false,
+        "images": 0,
+        "videoFrames": 2,
+        "frameTimes": [
+          1.72,
+          6.46
+        ],
+        "audioSeconds": 8.34,
+        "mediaUnchecked": false
+      },
+      "reasons": [
+        "A prize requires an advance payment",
+        "Educational example labeled as fictional",
+        "Explicit warning labels present"
+      ],
+      "transcriptPresent": true,
+      "observationsPresent": true,
+      "authenticity": "unverified"
+    }
+  ]
+}

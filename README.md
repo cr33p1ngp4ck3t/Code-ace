@@ -1,8 +1,22 @@
-# Nova — Digital Shield
+# Verifeed — Digital Shield
 
-A hackathon prototype that explains scam warning signs beside social posts and lets users request deeper checks of **text, images, voice/audio, and video**. Includes a Chromium extension, an English/Urdu review studio, and a local Groq backend.
+A hackathon prototype that explains scam warning signs beside social posts and lets users request deeper checks of **text, images, voice/audio, and video**. Includes a Chromium extension, an English/Urdu review studio, and a Groq backend that can run locally or on Oracle Cloud.
 
-## Run it
+## Current Oracle setup
+
+The backend runs as the `verifeed` systemd service on `opc@84.235.240.141`, with its existing Groq configuration kept on that server. It starts automatically after a server reboot. The extension runs on this PC and defaults to **http://127.0.0.1:4318**, forwarded through SSH to Oracle's private port 4317.
+
+After restarting Windows, reconnect from this repo:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/connect-oracle.ps1
+```
+
+The script uses `Downloads\oracle_vps.key` under your Windows user folder. A different key path can be supplied with `-KeyPath`. Reload Verifeed on `chrome://extensions` after updating the extension files. If you previously saved a backend address, open **Server connection**, save `http://127.0.0.1:4318`, and leave the access code blank. The studio is at **http://127.0.0.1:4318**; the practice feed is at **http://127.0.0.1:4318/demo**.
+
+See [Oracle deployment and HTTPS setup](deploy/ORACLE.md) for service commands and the optional public HTTPS connection. Editing the PC's `.env` does not change the Oracle backend.
+
+## Run a local backend instead
 
 Requires **Node.js 22+**. The app has no runtime npm dependencies.
 
@@ -10,7 +24,7 @@ Requires **Node.js 22+**. The app has no runtime npm dependencies.
 npm start
 ```
 
-Open **http://127.0.0.1:4317** for the studio or **http://127.0.0.1:4317/demo** for the practice feed. Local text checks work immediately.
+Open **http://127.0.0.1:4317** for the studio or **http://127.0.0.1:4317/demo** for the practice feed. Save `http://127.0.0.1:4317` in the extension's **Server connection** to use this local backend. Local text checks work immediately.
 
 For AI checks, copy `.env.example` to `.env` if `.env` does not already exist. Add your key in your editor:
 
@@ -20,19 +34,21 @@ GROQ_API_KEY=your_key_here
 
 Restart `npm start` after editing `.env`. The key belongs only in this git-ignored file. Do not paste it into extension files. If a model is unavailable in your Groq account, change its model ID in `.env`.
 
-On Windows/macOS, `npm run dev` watches `.env` and the server folder and restarts automatically when they change. Refresh the studio after adding the key. The development preview started by this coding session uses that watch mode.
+On Windows/macOS, `npm run dev` watches `.env` and the server folder and restarts automatically when they change. Refresh the studio after adding the key.
 
 ## Install the extension
 
 1. Open `chrome://extensions` or `edge://extensions`.
 2. Enable **Developer mode**, choose **Load unpacked**, and select this repo’s **extension** folder.
 3. Refresh an open X/Twitter, Facebook, Instagram, LinkedIn, or practice feed tab.
-4. Look for Nova’s badge. **Why?** explains local rules. **Open full check** imports the selected post into the studio; it does not call AI.
-5. Review the prepared content, then press **Check with AI** to send it to Groq.
+4. Click the small **Verifeed** pill at the bottom-right of a post to open its review on the same tab. Local explanations and available media appear before any AI call.
+5. Press **Analyze with AI** inside the panel to check scam risk and AI-like writing. Click **×** to close it; clicking outside or pressing Escape leaves it open.
+
+The **AI writing & quality** section flags possible formulaic phrasing, repeated structures, generic claims, assistant-like wording, or explicit AI-writing disclosures. It shows source excerpts and remains separate from scam risk. Short text gets an insufficient-evidence result. These are writing observations, not proof of authorship or an AI percentage; see the [ACL study on social-post detection limits](https://aclanthology.org/2025.findings-acl.695/). Images, audio, and video can also be reviewed inside the panel. The toolbar still opens the full studio when wanted.
 
 The popup scans the current feed when opened and can scan again, pause badges, change the badge language, and show private post flags. Installation also initializes supported feed tabs that are already open. Right-click selected text or an image to open a review. Media import is limited to supported platform CDNs; when a protected, streaming, blob, or oversized file cannot be imported, upload the original in the studio. Inline text checks require no backend or API key.
 
-If badges are missing, reload Nova on the browser's extensions page, refresh the feed, and open the Nova popup. Make sure **Automatic local checks** is on. The popup reports how many posts were found, whether checks are paused, or whether the tab could not be accessed. For access errors, allow Nova access to the site in the browser's extension settings. If it reports no posts after scrolling, the current feed layout may not match an adapter; selected text can still be reviewed from the right-click menu.
+If badges are missing, reload Verifeed on the browser's extensions page, refresh the feed, and open the Verifeed popup. Make sure **Automatic local checks** is on. The popup reports how many posts were found, whether checks are paused, or whether the tab could not be accessed. For access errors, allow Verifeed access to the site in the browser's extension settings. If it reports no posts after scrolling, the current feed layout may not match an adapter; selected text can still be reviewed from the right-click menu.
 
 The LinkedIn adapter handles both legacy class-based posts and `data-view-name="feed-full-update"` / activity `data-id` containers, including markers assigned after a post loads. These alternative containers are also used in [published LinkedIn filters](https://blog.georgovassilis.com/2025/05/27/hiding-suggested-linkedin-posts/) and a [post-permalink userscript](https://gist.github.com/wohfab/71e0785399afdf8f0b9eaeeaa9c58500). Browser tests cover representative layouts; a logged-in live feed still needs user verification.
 
@@ -56,12 +72,12 @@ Uploads accept JPG/PNG/WebP and browser-decodable audio/video. Files are limited
 - English/Urdu interface and local explanations; AI responds in the requested language. Text accompanies risk colors. The studio supports small screens, keyboards and reduced motion.
 - **Listen** uses a matching device speech voice. Urdu requires an installed Urdu voice; the app reports when one is unavailable. It does not silently use an English voice for Urdu or call a paid speech service.
 - Scrolling makes no AI calls. File preparation happens on the device. Only an explicit AI check sends selected content to Groq.
-- The key stays in the local backend. The server binds to `127.0.0.1:4317`, checks origins/hosts, validates media and provider output, and never fetches arbitrary supplied URLs.
+- The key stays in the selected backend. The server binds to `127.0.0.1:4317` by default, checks origins/hosts, validates media and provider output, and never fetches arbitrary supplied URLs. Oracle access currently uses an encrypted SSH tunnel.
 - Drafts are held in bounded memory, expire after five minutes, and are consumed once. Analysis results are reused for 30 minutes; duplicate submissions share an in-flight request. Nothing is written to a server database or content log.
 - Saved check summaries live in browser local storage. Feed flags live in extension storage. Delete them in their respective UI. Neither submits a platform report.
 - Provider-side data handling follows your Groq account and policies; this prototype does not promise zero retention at the provider.
 
-The demo has conservative per-process request/token budgets, one active analysis at a time, timeouts, and provider-limit cooldowns. Counters reset when the local server restarts. Public deployment needs user authentication and durable quotas. Set `ALLOWED_EXTENSION_ID` to restrict the local server to your extension ID if desired.
+The demo has conservative per-process request/token budgets, one active analysis at a time, timeouts, and provider-limit cooldowns. Counters reset when the backend restarts. Optional public HTTPS mode requires a separate server access code and uses one-time connection tickets for studio sign-in. Individual user accounts and durable quotas are future work. Set `ALLOWED_EXTENSION_ID` to restrict extension access to your extension ID if desired.
 
 ## Test and demo
 
@@ -71,15 +87,19 @@ npm run check
 npm test
 # Installation, feed initialization and AI setup errors; can run alongside npm start:
 npm run test:extension
+npm run test:remote
+npm run test:panel
 # If no Playwright Chromium is already installed:
 npx playwright install chromium
-# Stop npm start first; browser tests use port 4317:
+# Browser tests use an isolated server on an available port:
 npm run test:browser
 ```
 
-The browser suite loads the actual Manifest V3 extension, exercises media preparation and analysis, and tests all four adapters against representative DOM fixtures. It uses a **test-only Groq substitute**, never live tokens. Screenshots and results are written to git-ignored `artifacts/`. It can reuse a cached Playwright Chromium, or use `NOVA_BROWSER_EXECUTABLE` to specify one.
+The browser suite loads the actual Manifest V3 extension, exercises media preparation and analysis, and tests all four adapters against representative DOM fixtures. It uses a **test-only Groq substitute**, never live tokens. Screenshots and results are written to `artifacts/`. It can reuse a cached Playwright Chromium, or use `VERIFEED_BROWSER_EXECUTABLE` to specify one (`NOVA_BROWSER_EXECUTABLE` remains supported).
 
-**Validation limits:** live Groq calls require a valid key and were not exercised without one. Authenticated live feeds were unavailable for testing; check the adapters against your logged-in accounts. Social sites change their DOM. Studio uploads/paste remain available when feed extraction is unsupported.
+**Live verification (September 12, 2026):** text, image, audio, and video checks all returned successful Groq results through the Oracle backend. Whisper transcribed the audio and video speech; vision inspected the image and two sampled video frames. Results are recorded in `artifacts/live-check-results.json`, separately from the automated tests.
+
+**Validation limits:** authenticated live feeds were unavailable for testing; check the adapters against your logged-in accounts. Social sites change their DOM. Studio uploads/paste remain available when feed extraction is unsupported. Media origin remains unverified.
 
 The practice feed includes fictional normal posts, advance-fee offers, a voice message, a poster, a narrated video, scam-awareness advice, and a harmless AI-art caption. **Add a new post** demonstrates dynamic scanning. App results come from local rules or actual configured provider calls; there is no canned AI-result mode in the product.
 
@@ -97,7 +117,8 @@ English audio uses the installed device voice. Graphics and video are locally ge
 - `PLAN.md` — adjusted multimodal scope and implementation plan.
 - `extension/` — Manifest V3 extension, four adapters, shared local rules.
 - `web/` — studio, media preparation, translations and practice feed.
-- `server/` — local server, Groq pipeline, validation and budgets.
+- `server/` — backend, Groq pipeline, server access, validation and budgets.
+- `deploy/` — Oracle service, tunnel instructions, and optional HTTPS configuration.
 - `tests/` — rule, server, pipeline and browser checks.
 
 Model defaults were checked against [Groq vision](https://console.groq.com/docs/vision), [speech-to-text](https://console.groq.com/docs/speech-to-text), and [GPT-OSS documentation](https://console.groq.com/docs/model/openai/gpt-oss-120b) on September 12, 2026. The original challenge and team idea remain in `prompt.txt`.
