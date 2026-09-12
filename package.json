@@ -1,0 +1,20 @@
+{
+  "name": "nova-digital-shield",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "An accessible, on-demand digital scam shield for text, images, audio and video.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server/index.js",
+    "dev": "node --watch --watch-path=.env --watch-path=server --env-file-if-exists=.env server/index.js",
+    "test": "node --test tests/*.test.js",
+    "test:browser": "node tests/browser.mjs",
+    "check": "node scripts/check.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.63.0"
+  }
+}

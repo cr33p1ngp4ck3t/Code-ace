@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#244c3c"><title>Nova — Your digital shield</title><link rel="icon" href="/assets/shield.svg"><link rel="stylesheet" href="/styles.css"><script src="/shared/rules.js" defer></script><script type="module" src="/app.js"></script></head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="Nova home"><img src="/assets/shield.svg" width="42" height="42" alt=""><span>nova<span class="brand-dot">.</span><small>DIGITAL SHIELD</small></span></a>
+    <p class="sidebar-tag" data-i18n="tagline">A little pause. A lot of protection.</p>
+    <nav aria-label="Main navigation">
+      <button class="nav-item active" data-view="studio" aria-current="page"><span aria-hidden="true">◈</span><span data-i18n="check">Check content</span></button>
+      <a class="nav-item" href="/demo"><span aria-hidden="true">▤</span><span data-i18n="feed">Practice feed</span><span class="nav-arrow" aria-hidden="true">↗</span></a>
+      <button class="nav-item" data-view="saved"><span aria-hidden="true">⚑</span><span data-i18n="saved">Saved checks</span><span class="saved-count" id="saved-count">0</span></button>
+      <button class="nav-item" data-view="how"><span aria-hidden="true">◎</span><span data-i18n="how">How it works</span></button>
+    </nav>
+    <div class="sidebar-bottom"><div class="quiet-art" aria-hidden="true"><span>✳</span><i></i><b>↗</b></div><p data-i18n="keepSimple">Less guesswork. More understanding.</p><small>SOCIAL NOVA · 2026</small></div>
+  </aside>
+  <div class="workspace">
+    <header class="topbar"><span class="breadcrumb">nova <span>/</span> <span id="breadcrumb-label" data-i18n="studio">Review studio</span></span><div class="topbar-actions"><span class="local-status"><i></i><span data-i18n="localActive">Local shield active</span></span><label class="sr-only" for="language">Language / زبان</label><select id="language"><option value="en">English</option><option value="ur">اردو</option></select></div></header>
+    <main id="main" tabindex="-1">
+      <section id="studio-view" class="view">
+        <div class="hero"><div><p class="eyebrow"><span></span><span data-i18n="yourShield">YOUR DIGITAL SHIELD</span></p><h1><span data-i18n="hero">Before you trust it,</span><br><em data-i18n="heroAccent">give it a second look.</em></h1><p class="hero-copy" data-i18n="intro">A post, a picture, a voice note. Find the warning signs and a clear next step.</p></div><div class="hero-emblem" aria-hidden="true"><div class="orbit"></div><svg viewBox="0 0 150 160"><path d="M75 16 127 38v43c0 29-23 48-52 65-29-17-52-36-52-65V38Z" fill="#dce9bd" stroke="#244c3c" stroke-width="2"/><path d="m50 79 18 18 35-40" fill="none" stroke="#244c3c" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="emblem-star">✳</span><span class="emblem-dot"></span></div></div>
+        <div class="steps" aria-hidden="true"><span><b>01</b><span data-i18n="step1">ADD CONTENT</span></span><i></i><span><b>02</b><span data-i18n="step2">SPOT THE SIGNS</span></span><i></i><span><b>03</b><span data-i18n="step3">TAKE A SAFE STEP</span></span></div>
+        <div class="studio-grid">
+          <section class="composer panel" aria-labelledby="composer-title">
+            <div class="panel-heading"><div><h2 id="composer-title" data-i18n="studio">Review studio</h2><p data-i18n="studioHint">Bring something you’re unsure about.</p></div><span class="tiny-shield" aria-hidden="true">✳</span></div>
+            <div class="type-tabs" role="tablist" aria-label="Content type"><button id="tab-text" role="tab" aria-selected="true" aria-controls="input-panel" data-kind="text"><span aria-hidden="true">≡</span><span data-i18n="message">Message</span></button><button id="tab-image" role="tab" aria-selected="false" aria-controls="input-panel" tabindex="-1" data-kind="image"><span aria-hidden="true">▧</span><span data-i18n="image">Image</span></button><button id="tab-audio" role="tab" aria-selected="false" aria-controls="input-panel" tabindex="-1" data-kind="audio"><span aria-hidden="true">♫</span><span data-i18n="audio">Audio</span></button><button id="tab-video" role="tab" aria-selected="false" aria-controls="input-panel" tabindex="-1" data-kind="video"><span aria-hidden="true">▷</span><span data-i18n="video">Video</span></button></div>
+            <div id="input-panel" role="tabpanel" aria-labelledby="tab-text">
+              <div id="dropzone" class="dropzone" hidden><input id="file" type="file" accept="image/jpeg,image/png,image/webp,audio/*,video/mp4,video/webm"><label for="file"><span class="upload-icon" aria-hidden="true">↑</span><strong data-i18n="drop">Drop a file here, or browse</strong><small data-i18n="fileHint">JPG, PNG, WebP · audio · MP4 / WebM · up to 40 MB</small></label></div>
+              <div id="media-preview" hidden></div>
+              <div class="text-field"><label for="content" data-i18n="textLabel">Paste a message or add context</label><textarea id="content" maxlength="6000" rows="6" data-placeholder="placeholder" placeholder="“Congratulations! You’ve won. Send your code to claim…”"></textarea><div class="field-footer"><span id="char-count">0 / 6,000</span><button id="clear" class="text-button" data-i18n="clear">Clear</button></div></div>
+            </div>
+            <div class="example-row"><span data-i18n="try">Try an example</span><div id="examples"></div></div>
+            <div id="input-message" class="message-box" role="status" hidden></div>
+            <div class="check-actions"><button id="local-check" class="button secondary"><span aria-hidden="true">⌁</span><span data-i18n="localCheck">Quick local check</span></button><button id="ai-check" class="button primary"><span aria-hidden="true">✳</span><span data-i18n="aiCheck">Check with AI</span><span aria-hidden="true">↗</span></button></div>
+            <p class="privacy-note"><span aria-hidden="true">♧</span><span data-i18n="private">Your content stays here until you choose an AI check.</span></p>
+            <p id="ai-status" class="setup-note" role="status"></p>
+          </section>
+          <section id="result-panel" class="result-panel panel" aria-label="Check result" aria-live="polite"></section>
+        </div>
+        <footer class="studio-footer"><span data-i18n="note">Made for a more confident scroll.</span><span data-i18n="support">X · Facebook · Instagram · LinkedIn</span></footer>
+      </section>
+      <section id="saved-view" class="view" hidden><p class="eyebrow" data-i18n="saved">Saved checks</p><h1 data-i18n="savedTitle">A second look, saved.</h1><p class="hero-copy" data-i18n="savedIntro">Checks you chose to keep on this device. These flags are private and are not platform reports.</p><div id="saved-list"></div></section>
+      <section id="how-view" class="view" hidden><p class="eyebrow" data-i18n="how">How it works</p><h1 data-i18n="howTitle">Pause. Understand. Decide.</h1><p class="hero-copy" data-i18n="howIntro">A simple check at the moment you need it.</p><div class="how-grid"><article class="panel"><b>01</b><h2 data-i18n="how1">An instant first look</h2><p data-i18n="how1Body"></p></article><article class="panel"><b>02</b><h2 data-i18n="how2">A closer look, when you ask</h2><p data-i18n="how2Body"></p></article><article class="panel"><b>03</b><h2 data-i18n="how3">One understandable next step</h2><p data-i18n="how3Body"></p></article></div><div class="origin-explainer"><h2 data-i18n="origin"></h2><p data-i18n="originBody"></p></div></section>
+    </main>
+  </div>
+  <div id="toast" role="status" hidden></div>
+</body></html>
